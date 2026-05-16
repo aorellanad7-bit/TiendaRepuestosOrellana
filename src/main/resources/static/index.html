@@ -354,21 +354,20 @@
         if (carrito.length === 0) return alert("El carrito está vacío");
 
         const nombre = document.getElementById('cliente-nombre').value.trim();
-        const email = document.getElementById('cliente-email').value.trim();
         const telefono = document.getElementById('cliente-telefono').value.trim();
         const direccion = document.getElementById('cliente-direccion').value.trim();
 
-        if (!nombre || !email || !telefono) {
-            return alert("❌ Por favor completa los campos obligatorios (*)");
+        // Quitamos la validación del email porque no tienes ese campo en el HTML
+        if (!nombre || !telefono || !direccion) {
+            return alert("❌ Por favor completa los campos obligatorios: Nombre, Teléfono y Dirección");
         }
 
         const pedidoData = {
             clienteNombre: nombre,
-            clienteEmail: email,
             clienteTelefono: telefono,
-            direccion: direccion || "",
+            direccion: direccion,
             items: carrito.map(item => ({
-                productoId: item.id,
+                producto: { id: item.id }, // Ajustamos a la estructura que espera tu Java
                 cantidad: item.cantidad
             }))
         };
@@ -378,13 +377,16 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(pedidoData)
         })
-            .then(res => res.ok ? res.json() : Promise.reject())
-            .then(() => {
-                alert("🎉 ¡Pedido enviado con éxito!\nNos contactaremos pronto.");
-                vaciarCarrito();
-                bootstrap.Modal.getInstance(document.getElementById('modalCarrito')).hide();
+            .then(res => {
+                if (res.ok) {
+                    alert("🎉 ¡Pedido enviado con éxito!\nNos contactaremos pronto por WhatsApp.");
+                    vaciarCarrito();
+                    bootstrap.Modal.getInstance(document.getElementById('modalCarrito')).hide();
+                } else {
+                    throw new Error();
+                }
             })
-            .catch(() => alert("❌ Error al enviar el pedido"));
+            .catch(() => alert("❌ Error al enviar el pedido. Verifica tu conexión."));
     }
 
     // ====================== PRODUCTOS ======================
