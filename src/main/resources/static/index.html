@@ -361,46 +361,42 @@
             return alert("❌ Por favor completa Nombre, Teléfono y Dirección");
         }
 
-        const totalCalculado = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
-
-        // ESTRUCTURA BLINDADA PARA SPRING BOOT
-        const pedidoData = {
-            clienteNombre: nombre,
-            clienteEmail: "cliente@correo.com",
-            clienteTelefono: telefono,
-            direccion: direccion,
-            total: parseFloat(totalCalculado.toFixed(2)),
-            fecha: new Date().toISOString(), // Java a veces exige la fecha
-            estado: "PENDIENTE",
-            items: carrito.map(item => ({
+        // Cálculo ultra simple
+        let totalC = 0;
+        const itemsProcesados = carrito.map(item => {
+            totalC += (item.precio * item.cantidad);
+            return {
                 cantidad: parseInt(item.cantidad),
                 precioUnitario: parseFloat(item.precio),
-                producto: { id: parseInt(item.id) } // Objeto anidado que espera JPA
-            }))
-        };
+                producto: { id: parseInt(item.id) }
+            };
+        });
 
-        console.log("Enviando este objeto a Java:", pedidoData);
+        const pedidoData = {
+            clienteNombre: nombre,
+            clienteEmail: "venta@orellana.com",
+            clienteTelefono: telefono,
+            direccion: direccion,
+            total: parseFloat(totalC.toFixed(2)),
+            estado: "PENDIENTE",
+            items: itemsProcesados
+        };
 
         fetch('/api/pedidos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(pedidoData)
         })
-            .then(async res => {
+            .then(res => {
                 if (res.ok) {
                     alert("✅ ¡PEDIDO ENVIADO CON ÉXITO!");
                     vaciarCarrito();
-                    bootstrap.Modal.getInstance(document.getElementById('modalCarrito')).hide();
+                    location.reload(); // Recargamos para limpiar todo
                 } else {
-                    const errorDato = await res.text();
-                    console.error("DETALLE DEL ERROR:", errorDato);
-                    alert("❌ ERROR DEL SERVIDOR: " + errorDato);
+                    alert("❌ El servidor tiene un error interno (500).");
                 }
             })
-            .catch(err => {
-                console.error("ERROR DE RED:", err);
-                alert("❌ Error de red o conexión.");
-            });
+            .catch(err => alert("❌ Error de red."));
     }
     // ====================== PRODUCTOS ======================
     let productos = [];
