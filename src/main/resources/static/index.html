@@ -361,22 +361,25 @@
             return alert("❌ Por favor completa Nombre, Teléfono y Dirección");
         }
 
-        // Calculamos el total exacto
         const totalCalculado = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
 
+        // ESTRUCTURA BLINDADA PARA SPRING BOOT
         const pedidoData = {
             clienteNombre: nombre,
+            clienteEmail: "cliente@correo.com",
             clienteTelefono: telefono,
-            clienteEmail: "ventas@orellana.com", // Valor por defecto para tu campo en Java
             direccion: direccion,
-            total: totalCalculado,
+            total: parseFloat(totalCalculado.toFixed(2)),
+            fecha: new Date().toISOString(), // Java a veces exige la fecha
             estado: "PENDIENTE",
             items: carrito.map(item => ({
-                producto: { id: parseInt(item.id) },
                 cantidad: parseInt(item.cantidad),
-                precioUnitario: parseFloat(item.precio)
+                precioUnitario: parseFloat(item.precio),
+                producto: { id: parseInt(item.id) } // Objeto anidado que espera JPA
             }))
         };
+
+        console.log("Enviando este objeto a Java:", pedidoData);
 
         fetch('/api/pedidos', {
             method: 'POST',
@@ -385,21 +388,20 @@
         })
             .then(async res => {
                 if (res.ok) {
-                    alert("🎉 ¡Pedido enviado con éxito! Lo verás en tu panel de Admin.");
+                    alert("✅ ¡PEDIDO ENVIADO CON ÉXITO!");
                     vaciarCarrito();
                     bootstrap.Modal.getInstance(document.getElementById('modalCarrito')).hide();
                 } else {
-                    const errorTexto = await res.text();
-                    console.error("Error del servidor:", errorTexto);
-                    alert("❌ El servidor rechazó el pedido. Revisa que el producto exista en el Admin.");
+                    const errorDato = await res.text();
+                    console.error("DETALLE DEL ERROR:", errorDato);
+                    alert("❌ ERROR DEL SERVIDOR: " + errorDato);
                 }
             })
             .catch(err => {
-                console.error("Error de conexión:", err);
-                alert("❌ Error de comunicación con el servidor.");
+                console.error("ERROR DE RED:", err);
+                alert("❌ Error de red o conexión.");
             });
     }
-
     // ====================== PRODUCTOS ======================
     let productos = [];
     let productoActual = null;
