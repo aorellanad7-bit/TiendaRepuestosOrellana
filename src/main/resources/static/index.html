@@ -357,7 +357,7 @@
         const telefono = document.getElementById('cliente-telefono').value.trim();
         const direccion = document.getElementById('cliente-direccion').value.trim();
 
-        // Quitamos la validación del email porque no tienes ese campo en el HTML
+        // Validamos solo lo que existe en tu HTML
         if (!nombre || !telefono || !direccion) {
             return alert("❌ Por favor completa los campos obligatorios: Nombre, Teléfono y Dirección");
         }
@@ -367,7 +367,7 @@
             clienteTelefono: telefono,
             direccion: direccion,
             items: carrito.map(item => ({
-                producto: { id: item.id }, // Ajustamos a la estructura que espera tu Java
+                producto: { id: item.id }, // Ajustado para que Java lo reconozca bien
                 cantidad: item.cantidad
             }))
         };
@@ -379,14 +379,17 @@
         })
             .then(res => {
                 if (res.ok) {
-                    alert("🎉 ¡Pedido enviado con éxito!\nNos contactaremos pronto por WhatsApp.");
+                    alert("🎉 ¡Pedido enviado con éxito!\nNos contactaremos pronto.");
                     vaciarCarrito();
                     bootstrap.Modal.getInstance(document.getElementById('modalCarrito')).hide();
                 } else {
-                    throw new Error();
+                    alert("❌ Hubo un problema con el servidor al procesar el pedido.");
                 }
             })
-            .catch(() => alert("❌ Error al enviar el pedido. Verifica tu conexión."));
+            .catch(err => {
+                console.error("Error:", err);
+                alert("❌ Error de conexión. Inténtalo de nuevo.");
+            });
     }
 
     // ====================== PRODUCTOS ======================
