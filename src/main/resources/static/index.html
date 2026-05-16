@@ -366,8 +366,9 @@
             clienteNombre: nombre,
             clienteTelefono: telefono,
             direccion: direccion,
+            clienteEmail: "noreply@orellana.com", // Agregamos esto para "engañar" al servidor
             items: carrito.map(item => ({
-                producto: { id: parseInt(item.id) }, // Enviamos el objeto producto con su ID como número
+                producto: { id: parseInt(item.id) },
                 cantidad: parseInt(item.cantidad)
             }))
         };

@@ -13,7 +13,7 @@ public class Pedido {
     private Integer id;
 
     private String clienteNombre;
-    private String clienteEmail;
+    private String clienteEmail="";
     private String clienteTelefono;
     private String direccion;
 
