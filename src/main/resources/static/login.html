@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Login Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #1A1A1A; color: white; }
+        .login-box { max-width: 400px; margin: 100px auto; }
+    </style>
+</head>
+<body>
+<div class="login-box">
+    <div class="card">
+        <div class="card-body p-5">
+            <h3 class="text-center mb-4">🔐 Acceso Admin</h3>
+            <form method="post" action="/login">
+                <div class="mb-3">
+                    <input type="text" name="username" class="form-control" placeholder="Usuario" required>
+                </div>
+                <div class="mb-3">
+                    <input type="password" name="password" class="form-control" placeholder="Contraseña" required>
+                </div>
+                <button type="submit" class="btn btn-danger w-100">Entrar</button>
+            </form>
+            <p class="text-center mt-3 text-muted small">Usuario: <strong>admin</strong><br>Contraseña: <strong>admin123</strong></p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

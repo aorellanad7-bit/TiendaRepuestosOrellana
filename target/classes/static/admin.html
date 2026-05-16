@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - Repuestos Orellana</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f8f9fa; }
+        .navbar { background: #1A1A1A; }
+        .nav-link.active { background: #7B0000; color: white !important; }
+        .table thead { background: #1A1A1A; color: white; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark shadow mb-4">
+    <div class="container-fluid">
+        <span class="navbar-brand fw-bold">REPUESTOS ORELLANA - PANEL ADMIN</span>
+        <a href="/logout" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item"><a class="nav-link active" onclick="showTab(1)">📦 Productos</a></li>
+        <li class="nav-item"><a class="nav-link" onclick="showTab(2)">📋 Pedidos</a></li>
+    </ul>
+
+    <!-- ==================== PRODUCTOS ==================== -->
+    <div id="tab1">
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">Nuevo / Editar Producto</div>
+                    <div class="card-body">
+                        <form id="formProducto">
+                            <input type="text" id="nombre" class="form-control mb-2" placeholder="Nombre del producto" required>
+                            <div class="row">
+                                <div class="col-6"><input type="number" step="0.01" id="precio" class="form-control mb-2" placeholder="Precio Q" required></div>
+                                <div class="col-6"><input type="number" id="stock" class="form-control mb-2" placeholder="Stock" required></div>
+                            </div>
+                            <select id="categoriaId" class="form-control mb-2" required>
+                                <option value="1">Frenos</option>
+                                <option value="2">Motor</option>
+                                <option value="3">Suspensión</option>
+                                <option value="4">Sist. Eléctrico</option>
+                                <option value="5">Rodamiento</option>
+                                <option value="6">Carrocería</option>
+                                <option value="7">Filtros</option>
+                            </select>
+                            <input type="text" id="imagenUrl" class="form-control mb-3" placeholder="URL de imagen" required>
+                            <button type="submit" class="btn btn-danger w-100" id="btnSubmit">Guardar Producto</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <table class="table table-hover" id="tablaProductos">
+                    <thead>
+                    <tr>
+                        <th>Img</th>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== PEDIDOS ==================== -->
+    <!-- Dentro de la pestaña tab2 reemplaza la tabla por esto -->
+    <!-- ==================== PEDIDOS ==================== -->
+    <div id="tab2" style="display:none;">
+        <h4>Pedidos Recibidos</h4>
+        <table class="table table-hover" id="tablaPedidos">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Teléfono</th>
+                <th>Total</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Modal Detalle del Pedido -->
+    <div class="modal fade" id="modalDetalle" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">Detalle del Pedido #<span id="detalleId"></span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="detalleCliente"></div>
+                    <table class="table mt-3" id="tablaDetalleItems">
+                        <thead><tr><th>Producto</th><th>Cantidad</th><th>Precio Unit.</th><th>Subtotal</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let editandoId = null;
+
+    function showTab(n) {
+        document.getElementById('tab1').style.display = n === 1 ? 'block' : 'none';
+        document.getElementById('tab2').style.display = n === 2 ? 'block' : 'none';
+        if (n === 2) cargarPedidos();
+    }
+
+    // ==================== PRODUCTOS ====================
+    function cargarProductos() {
+        fetch('/api/productos')
+            .then(r => r.json())
+            .then(data => {
+                let html = '';
+                data.forEach(p => {
+                    html += `<tr>
+                        <td><img src="${p.imagenUrl}" width="50" height="50" style="object-fit:cover; border-radius:4px;"></td>
+                        <td>${p.nombre}</td>
+                        <td>Q ${p.precio.toFixed(2)}</td>
+                        <td>${p.stock}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editar(${p.id})">Editar</button>
+                            <button class="btn btn-danger btn-sm" onclick="eliminar(${p.id})">Eliminar</button>
+                        </td>
+                    </tr>`;
+                });
+                document.querySelector('#tablaProductos tbody').innerHTML = html;
+            });
+    }
+
+    document.getElementById('formProducto').addEventListener('submit', e => {
+        e.preventDefault();
+        const prod = {
+            nombre: document.getElementById('nombre').value,
+            precio: parseFloat(document.getElementById('precio').value),
+            stock: parseInt(document.getElementById('stock').value),
+            categoriaId: parseInt(document.getElementById('categoriaId').value),
+            imagenUrl: document.getElementById('imagenUrl').value
+        };
+
+        const url = editandoId ? `/api/productos/${editandoId}` : '/api/productos';
+        const method = editandoId ? 'PUT' : 'POST';
+
+        fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(prod)
+        }).then(() => {
+            alert(editandoId ? 'Producto actualizado' : 'Producto guardado');
+            cargarProductos();
+            document.getElementById('formProducto').reset();
+            editandoId = null;
+        });
+    });
+
+    function editar(id) {
+        fetch('/api/productos').then(r => r.json()).then(data => {
+            const p = data.find(x => x.id === id);
+            if (p) {
+                document.getElementById('nombre').value = p.nombre;
+                document.getElementById('precio').value = p.precio;
+                document.getElementById('stock').value = p.stock;
+                document.getElementById('categoriaId').value = p.categoriaId;
+                document.getElementById('imagenUrl').value = p.imagenUrl;
+                editandoId = id;
+            }
+        });
+    }
+
+    function eliminar(id) {
+        if (confirm('¿Eliminar este producto?')) {
+            fetch(`/api/productos/${id}`, { method: 'DELETE' }).then(() => cargarProductos());
+        }
+    }
+
+    function cargarPedidos() {
+        fetch('/api/pedidos')
+            .then(response => response.text())
+            .then(text => {
+                console.log("Respuesta del servidor:", text);
+
+                if (!text || text.trim() === '' || text.trim() === '[]') {
+                    document.querySelector('#tablaPedidos tbody').innerHTML =
+                        `<tr><td colspan="7" class="text-center text-muted py-4">No hay pedidos todavía</td></tr>`;
+                    return;
+                }
+
+                let data = [];
+                try {
+                    // TRUCO DE ORO: Limpiamos cualquier coma suelta antes de un corchete que mande el backend
+                    let textLimpio = text.replace(/,\s*]/g, ']');
+                    data = JSON.parse(textLimpio);
+                } catch (errorParseo) {
+                    // Si aún así falla el JSON, no rompemos la página, solo mostramos vacío
+                    console.warn("El servidor envió un formato extraño, protegiendo la vista...");
+                    document.querySelector('#tablaPedidos tbody').innerHTML =
+                        `<tr><td colspan="7" class="text-center text-muted py-4">No hay pedidos registrados</td></tr>`;
+                    return;
+                }
+
+                let html = '';
+                data.forEach(p => {
+                    const fecha = p.fecha ? new Date(p.fecha).toLocaleString('es-GT') : 'Sin fecha';
+                    html += `<tr>
+                    <td>${p.id || '-'}</td>
+                    <td>${fecha}</td>
+                    <td>${p.clienteNombre || 'Sin nombre'}</td>
+                    <td>${p.clienteTelefono || '-'}</td>
+                    <td><strong>Q ${(p.total || 0).toFixed(2)}</strong></td>
+                    <td><span class="badge bg-warning">${p.estado || 'PENDIENTE'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-success" onclick="cambiarEstado(${p.id}, 'CONFIRMADO')">Confirmar</button>
+                        <td>
+    <button class="btn btn-sm btn-info" onclick="verDetalle(${p.id})">Ver Detalle</button>
+
+</td>
+                    </td>
+                </tr>`;
+                });
+
+                document.querySelector('#tablaPedidos tbody').innerHTML = html ||
+                    `<tr><td colspan="7" class="text-center text-muted py-4">No hay pedidos todavía</td></tr>`;
+            })
+            .catch(err => {
+                console.error("Error de conexión:", err);
+                document.querySelector('#tablaPedidos tbody').innerHTML =
+                    `<tr><td colspan="7" class="text-center text-danger py-4">Error de conexión con el servidor</td></tr>`;
+            });
+    }
+    // Cargar al iniciar
+    cargarProductos();
+
+    function cambiarEstado(id, nuevoEstado) {
+        if (confirm(`¿Cambiar pedido #${id} a ${nuevoEstado}?`)) {
+            fetch(`/api/pedidos/${id}/estado?estado=${nuevoEstado}`, {
+                method: 'PUT'
+            }).then(() => cargarPedidos());
+        }
+    }
+
+    let pedidoActual = null;
+
+    function verDetalle(id) {
+        fetch(`/api/pedidos/${id}`)
+            .then(r => r.json())
+            .then(p => {
+                pedidoActual = p;
+                document.getElementById('detalleId').textContent = p.id;
+                document.getElementById('detalleCliente').innerHTML = `
+                <p><strong>Cliente:</strong> ${p.clienteNombre}</p>
+                <p><strong>Teléfono:</strong> ${p.clienteTelefono}</p>
+                <p><strong>Dirección:</strong> ${p.direccion || 'No especificada'}</p>
+            `;
+
+                let html = '';
+                p.items.forEach(item => {
+                    html += `<tr>
+                    <td>${item.producto.nombre}</td>
+                    <td>${item.cantidad}</td>
+                    <td>Q ${item.precioUnitario.toFixed(2)}</td>
+                    <td><strong>Q ${(item.cantidad * item.precioUnitario).toFixed(2)}</strong></td>
+                </tr>`;
+                });
+
+                document.querySelector('#tablaDetalleItems tbody').innerHTML = html;
+                new bootstrap.Modal(document.getElementById('modalDetalle')).show();
+            });
+    }
+</script>
+</body>
+</html>
