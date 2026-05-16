@@ -367,8 +367,8 @@
             clienteTelefono: telefono,
             direccion: direccion,
             items: carrito.map(item => ({
-                producto: { id: item.id }, // Ajustado para que Java lo reconozca bien
-                cantidad: item.cantidad
+                producto: { id: parseInt(item.id) }, // Enviamos el objeto producto con su ID como número
+                cantidad: parseInt(item.cantidad)
             }))
         };
 
