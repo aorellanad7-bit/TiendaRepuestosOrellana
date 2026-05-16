@@ -357,19 +357,24 @@
         const telefono = document.getElementById('cliente-telefono').value.trim();
         const direccion = document.getElementById('cliente-direccion').value.trim();
 
-        // Validamos solo lo que existe en tu HTML
         if (!nombre || !telefono || !direccion) {
-            return alert("❌ Por favor completa los campos obligatorios: Nombre, Teléfono y Dirección");
+            return alert("❌ Por favor completa Nombre, Teléfono y Dirección");
         }
+
+        // Calculamos el total exacto
+        const totalCalculado = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
 
         const pedidoData = {
             clienteNombre: nombre,
             clienteTelefono: telefono,
+            clienteEmail: "ventas@orellana.com", // Valor por defecto para tu campo en Java
             direccion: direccion,
-            clienteEmail: "noreply@orellana.com", // Agregamos esto para "engañar" al servidor
+            total: totalCalculado,
+            estado: "PENDIENTE",
             items: carrito.map(item => ({
                 producto: { id: parseInt(item.id) },
-                cantidad: parseInt(item.cantidad)
+                cantidad: parseInt(item.cantidad),
+                precioUnitario: parseFloat(item.precio)
             }))
         };
 
@@ -378,18 +383,20 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(pedidoData)
         })
-            .then(res => {
+            .then(async res => {
                 if (res.ok) {
-                    alert("🎉 ¡Pedido enviado con éxito!\nNos contactaremos pronto.");
+                    alert("🎉 ¡Pedido enviado con éxito! Lo verás en tu panel de Admin.");
                     vaciarCarrito();
                     bootstrap.Modal.getInstance(document.getElementById('modalCarrito')).hide();
                 } else {
-                    alert("❌ Hubo un problema con el servidor al procesar el pedido.");
+                    const errorTexto = await res.text();
+                    console.error("Error del servidor:", errorTexto);
+                    alert("❌ El servidor rechazó el pedido. Revisa que el producto exista en el Admin.");
                 }
             })
             .catch(err => {
-                console.error("Error:", err);
-                alert("❌ Error de conexión. Inténtalo de nuevo.");
+                console.error("Error de conexión:", err);
+                alert("❌ Error de comunicación con el servidor.");
             });
     }
 
