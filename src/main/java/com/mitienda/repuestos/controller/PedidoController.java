@@ -21,19 +21,25 @@ public class PedidoController {
     private com.mitienda.repuestos.repository.PedidoRepository pedidoRepository;  // ← AÑADIDO
 
     @PostMapping
-    public ResponseEntity<Pedido> crearPedido(@RequestBody PedidoRequest request) {
+    public ResponseEntity<?> crearPedido(@RequestBody PedidoRequest request) { // Cambiado a <?> para enviar mensajes de error
         try {
+            // Validación manual rápida para evitar errores de base de datos
+            if (request.getClienteNombre() == null || request.getItems() == null || request.getItems().isEmpty()) {
+                return ResponseEntity.badRequest().body("Datos incompletos");
+            }
+
             Pedido pedido = new Pedido();
             pedido.setClienteNombre(request.getClienteNombre());
-            pedido.setClienteEmail(request.getClienteEmail());
+            // Si el email llega nulo, le ponemos uno por defecto para que no explote la DB
+            pedido.setClienteEmail(request.getClienteEmail() != null ? request.getClienteEmail() : "sin@email.com");
             pedido.setClienteTelefono(request.getClienteTelefono());
             pedido.setDireccion(request.getDireccion());
 
             Pedido pedidoGuardado = pedidoService.crearPedido(pedido, request.getItems());
             return ResponseEntity.ok(pedidoGuardado);
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().build();
+            e.printStackTrace(); // Esto es lo que verás en los logs de Render
+            return ResponseEntity.internalServerError().body("Error interno: " + e.getMessage());
         }
     }
 

@@ -361,42 +361,33 @@
             return alert("❌ Por favor completa Nombre, Teléfono y Dirección");
         }
 
-        // Cálculo ultra simple
-        let totalC = 0;
-        const itemsProcesados = carrito.map(item => {
-            totalC += (item.precio * item.cantidad);
-            return {
-                cantidad: parseInt(item.cantidad),
-                precioUnitario: parseFloat(item.precio),
-                producto: { id: parseInt(item.id) }
-            };
-        });
-
-        const pedidoData = {
+        // EL SECRETO: El objeto debe llamarse exactamente como tu PedidoRequest de Java
+        const pedidoRequest = {
             clienteNombre: nombre,
-            clienteEmail: "venta@orellana.com",
+            clienteEmail: "ventas@orellana.com",
             clienteTelefono: telefono,
             direccion: direccion,
-            total: parseFloat(totalC.toFixed(2)),
-            estado: "PENDIENTE",
-            items: itemsProcesados
+            items: carrito.map(item => ({
+                productoId: parseInt(item.id), // CartItem suele esperar productoId
+                cantidad: parseInt(item.cantidad)
+            }))
         };
 
         fetch('/api/pedidos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(pedidoData)
+            body: JSON.stringify(pedidoRequest)
         })
             .then(res => {
                 if (res.ok) {
                     alert("✅ ¡PEDIDO ENVIADO CON ÉXITO!");
                     vaciarCarrito();
-                    location.reload(); // Recargamos para limpiar todo
+                    location.reload();
                 } else {
-                    alert("❌ El servidor tiene un error interno (500).");
+                    alert("❌ Error en el servidor. Verifica que los IDs de los productos sean correctos.");
                 }
             })
-            .catch(err => alert("❌ Error de red."));
+            .catch(err => alert("❌ Error de conexión."));
     }
     // ====================== PRODUCTOS ======================
     let productos = [];
